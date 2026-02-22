@@ -1,0 +1,154 @@
+import SwiftUI
+
+struct HomeView: View {
+    @Bindable var viewModel: WaterViewModel
+
+    var body: some View {
+        ZStack {
+            FluidicTheme.backgroundGradient
+                .ignoresSafeArea()
+
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 24) {
+                    // Greeting header
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(viewModel.greeting)
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundStyle(FluidicTheme.textPrimary)
+                        Text(viewModel.todayFormatted)
+                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                            .foregroundStyle(FluidicTheme.textSecondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
+
+                    // Water cup
+                    WaterCupView(progress: viewModel.progress) {
+                        viewModel.addWater()
+                    }
+                    .frame(width: 220, height: 300)
+                    .padding(.vertical, 8)
+
+                    // Progress text
+                    VStack(spacing: 8) {
+                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                            Text(formatML(viewModel.todayTotal))
+                                .font(.system(size: 32, weight: .bold, design: .rounded))
+                                .foregroundStyle(FluidicTheme.textPrimary)
+                                .contentTransition(.numericText())
+                            Text("/ \(formatML(viewModel.dailyGoal))")
+                                .font(.system(size: 18, weight: .medium, design: .rounded))
+                                .foregroundStyle(FluidicTheme.textSecondary)
+                        }
+                        Text("Tap the cup to add \(Int(viewModel.cupSize)) ml")
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundStyle(FluidicTheme.textSecondary)
+                    }
+
+                    // Quick add buttons
+                    HStack(spacing: 10) {
+                        QuickAddButton(label: "+100 ml") { viewModel.addWater(amount: 100) }
+                        QuickAddButton(label: "+250 ml") { viewModel.addWater(amount: 250) }
+                        QuickAddButton(label: "+500 ml") { viewModel.addWater(amount: 500) }
+                    }
+
+                    // Today's log card
+                    if !viewModel.todayIntakes.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Today's Log")
+                                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                .foregroundStyle(FluidicTheme.textPrimary)
+
+                            ForEach(viewModel.todayIntakes.suffix(5).reversed(), id: \.id) { intake in
+                                HStack {
+                                    Image(systemName: "drop.fill")
+                                        .foregroundStyle(FluidicTheme.waterBlue)
+                                        .font(.system(size: 14))
+                                    Text("\(Int(intake.amount)) ml")
+                                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                                        .foregroundStyle(FluidicTheme.textPrimary)
+                                    Spacer()
+                                    Text(intake.timestamp.formatted(.dateTime.hour().minute()))
+                                        .font(.system(size: 13, weight: .regular, design: .rounded))
+                                        .foregroundStyle(FluidicTheme.textSecondary)
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(FluidicTheme.cardBackground)
+                                .shadow(color: FluidicTheme.cardShadow, radius: 8, y: 4)
+                        )
+                        .padding(.horizontal)
+                    }
+                }
+                .padding(.vertical)
+            }
+
+            // Celebration overlay
+            if viewModel.showCelebration {
+                CelebrationView {
+                    viewModel.showCelebration = false
+                }
+            }
+        }
+    }
+
+    private func formatML(_ ml: Double) -> String {
+        if ml >= 1000 {
+            return String(format: "%.1f L", ml / 1000)
+        }
+        return "\(Int(ml)) ml"
+    }
+}
+
+struct CelebrationView: View {
+    var onDismiss: () -> Void
+    @State private var opacity = 0.0
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.3)
+                .ignoresSafeArea()
+                .onTapGesture { onDismiss() }
+
+            VStack(spacing: 16) {
+                Text("\u{1F389}")
+                    .font(.system(size: 64))
+                Text("Goal Reached!")
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundStyle(FluidicTheme.textPrimary)
+                Text("Amazing work staying hydrated today!")
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    .foregroundStyle(FluidicTheme.textSecondary)
+
+                Button("Continue") {
+                    onDismiss()
+                }
+                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 32)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(FluidicTheme.accent)
+                )
+                .padding(.top, 8)
+            }
+            .padding(32)
+            .background(
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(FluidicTheme.cardBackground)
+                    .shadow(color: FluidicTheme.cardShadow, radius: 20, y: 10)
+            )
+            .padding(40)
+        }
+        .opacity(opacity)
+        .onAppear {
+            withAnimation(.easeIn(duration: 0.3)) {
+                opacity = 1
+            }
+        }
+    }
+}
