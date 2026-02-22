@@ -1,24 +1,50 @@
-//
-//  ContentView.swift
-//  Fluidic
-//
-//  Created by Only0neHpLeft on 22.02.2026.
-//
-
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
+    @Environment(\.modelContext) private var modelContext
+    @State private var viewModel: WaterViewModel?
+    @State private var selectedTab = 0
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        Group {
+            if let viewModel {
+                TabView(selection: $selectedTab) {
+                    Tab("Home", systemImage: "drop.fill", value: 0) {
+                        HomeView(viewModel: viewModel)
+                    }
+
+                    Tab("History", systemImage: "chart.bar.fill", value: 1) {
+                        HistoryView(viewModel: viewModel)
+                    }
+
+                    Tab("Settings", systemImage: "gearshape.fill", value: 2) {
+                        SettingsView(viewModel: viewModel)
+                    }
+                }
+                .tint(FluidicTheme.accent)
+                .task {
+                    await viewModel.setupNotifications()
+                    await viewModel.setupHealthKit()
+                }
+            } else {
+                ZStack {
+                    FluidicTheme.backgroundGradient
+                        .ignoresSafeArea()
+                    ProgressView()
+                        .tint(FluidicTheme.waterBlue)
+                }
+            }
         }
-        .padding()
+        .onAppear {
+            if viewModel == nil {
+                viewModel = WaterViewModel(modelContext: modelContext)
+            }
+        }
     }
 }
 
 #Preview {
     ContentView()
+        .modelContainer(for: [WaterIntake.self, UserSettings.self], inMemory: true)
 }

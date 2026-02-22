@@ -1,11 +1,5 @@
-//
-//  FluidicApp.swift
-//  Fluidic
-//
-//  Created by Only0neHpLeft on 22.02.2026.
-//
-
 import SwiftUI
+import SwiftData
 
 @main
 struct FluidicApp: App {
@@ -13,5 +7,6 @@ struct FluidicApp: App {
         WindowGroup {
             ContentView()
         }
+        .modelContainer(for: [WaterIntake.self, UserSettings.self])
     }
 }
