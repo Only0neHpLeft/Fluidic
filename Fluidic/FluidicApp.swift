@@ -7,26 +7,26 @@ struct FluidicApp: App {
 
     init() {
         let schema = Schema([WaterIntake.self, UserSettings.self, Achievement.self, DailyChallenge.self])
-        let config = ModelConfiguration(schema: schema)
 
         do {
-            container = try ModelContainer(for: schema, configurations: [config])
+            container = try ModelContainer(for: schema)
         } catch {
-            // Migration failed — delete old store and recreate
-            // This is acceptable for pre-v1.0; production would use VersionedSchema
             print("Migration failed, recreating store: \(error)")
-            let fm = FileManager.default
-            let url = config.url
-            // Remove SQLite files (main, WAL, SHM)
-            for suffix in ["", "-wal", "-shm"] {
-                let fileURL = URL(fileURLWithPath: url.path + suffix)
-                try? fm.removeItem(at: fileURL)
-            }
+            Self.deleteDefaultStore()
             do {
-                container = try ModelContainer(for: schema, configurations: [config])
+                container = try ModelContainer(for: schema)
             } catch {
                 fatalError("Could not create ModelContainer: \(error)")
             }
+        }
+    }
+
+    private static func deleteDefaultStore() {
+        guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return }
+        let storePath = appSupport.appendingPathComponent("default.store").path
+        let fm = FileManager.default
+        for suffix in ["", "-wal", "-shm"] {
+            try? fm.removeItem(atPath: storePath + suffix)
         }
     }
 
