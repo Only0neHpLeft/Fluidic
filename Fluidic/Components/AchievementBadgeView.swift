@@ -13,13 +13,19 @@ struct AchievementBadgeView: View {
             VStack(spacing: 6) {
                 ZStack {
                     Circle()
-                        .fill(achievement.isUnlocked ? FluidicTheme.waterBlue.opacity(0.15) : Color.gray.opacity(0.1))
+                        .fill(achievement.isUnlocked ? achievement.color : Color.gray.opacity(0.2))
                         .frame(width: 56, height: 56)
 
                     if achievement.isUnlocked {
-                        Image(systemName: achievement.iconName)
-                            .font(.title2)
-                            .foregroundStyle(FluidicTheme.waterBlue)
+                        if let text = achievement.textOverlay {
+                            Text(text)
+                                .font(.system(size: 18, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white)
+                        } else {
+                            Image(systemName: achievement.iconName)
+                                .font(.title2)
+                                .foregroundStyle(.white)
+                        }
                     } else {
                         Image(systemName: "lock.fill")
                             .font(.caption)
