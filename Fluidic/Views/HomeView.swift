@@ -45,6 +45,13 @@ struct HomeView: View {
                             .foregroundStyle(FluidicTheme.textSecondary)
                     }
 
+                    // XP progress
+                    XPBarView(
+                        totalXP: viewModel.settings?.totalXP ?? 0,
+                        currentLevel: viewModel.settings?.currentLevel ?? 1,
+                        isCS: viewModel.appLocale.language.languageCode?.identifier == "cs"
+                    )
+
                     // Quick add buttons
                     HStack(spacing: 10) {
                         QuickAddButton(amount: 100) { viewModel.addWater(amount: 100) }
