@@ -4,6 +4,7 @@ import Charts
 struct HistoryView: View {
     @Bindable var viewModel: WaterViewModel
     @State private var selectedWeekOffset = 0
+    @State private var achievements: [Achievement] = []
 
     private var weekStart: Date {
         let calendar = Calendar.current
@@ -128,11 +129,37 @@ struct HistoryView: View {
                     )
                     .padding(.horizontal)
 
+                    // MARK: - Achievements
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(String(localized: "Achievements"))
+                            .font(.headline)
+                            .foregroundStyle(FluidicTheme.textPrimary)
+
+                        let unlockedCount = achievements.filter(\.isUnlocked).count
+                        Text(String(localized: "\(unlockedCount) of \(achievements.count) unlocked"))
+                            .font(.caption)
+                            .foregroundStyle(FluidicTheme.textSecondary)
+
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 5), spacing: 12) {
+                            ForEach(achievements, id: \.achievementId) { achievement in
+                                AchievementBadgeView(achievement: achievement)
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(FluidicTheme.cardBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .shadow(color: FluidicTheme.cardShadow, radius: 4, y: 2)
+                    .padding(.horizontal)
+
                     // Monthly calendar dots
                     MonthCalendarView(viewModel: viewModel)
                         .padding(.horizontal)
                 }
                 .padding(.vertical)
+            }
+            .onAppear {
+                achievements = viewModel.achievementManager.allAchievements()
             }
         }
     }
