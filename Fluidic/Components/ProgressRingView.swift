@@ -25,5 +25,7 @@ struct ProgressRingView: View {
                 .animation(.spring(response: 0.6, dampingFraction: 0.7), value: progress)
         }
         .frame(width: size, height: size)
+        .accessibilityLabel(String(localized: "Progress"))
+        .accessibilityValue(String(localized: "\(Int(progress * 100)) percent"))
     }
 }

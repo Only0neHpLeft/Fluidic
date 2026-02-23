@@ -83,5 +83,9 @@ struct WaterCupView: View {
             }
         }
         .animation(.spring(response: 0.6, dampingFraction: 0.7), value: progress)
+        .accessibilityLabel(String(localized: "Water cup"))
+        .accessibilityValue(String(localized: "\(Int(progress * 100)) percent of daily goal"))
+        .accessibilityHint(String(localized: "Double tap to add water"))
+        .accessibilityAddTraits(.isButton)
     }
 }

@@ -16,5 +16,6 @@ struct QuickAddButton: View {
                         .fill(FluidicTheme.waterBlue.opacity(0.15))
                 )
         }
+        .accessibilityLabel(String(localized: "Add \(amount) milliliters"))
     }
 }
