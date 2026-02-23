@@ -11,10 +11,11 @@ struct WaterCupView: View {
         min(progress, 0.93)
     }
 
-    private var waveAmplitude: Double {
-        guard progress > 0.01 else { return 0 }
-        if progress > 0.85 { return 4.0 * (1.0 - progress) * 5 }
-        return 4.0
+    private var waveAmplitude: CGFloat {
+        let base: CGFloat = 4.0
+        if progress < 0.05 { return base * (progress / 0.05) }
+        if progress > 0.80 { return base * pow((1.0 - progress) / 0.20, 0.5) }
+        return base
     }
 
     var body: some View {
