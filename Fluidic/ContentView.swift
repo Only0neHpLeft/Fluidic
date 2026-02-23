@@ -22,10 +22,10 @@ struct ContentView: View {
                         SettingsView(viewModel: viewModel)
                     }
                 }
+                .environment(\.locale, viewModel.appLocale)
                 .tint(FluidicTheme.accent)
                 .task {
                     await viewModel.setupNotifications()
-                    await viewModel.setupHealthKit()
                 }
             } else {
                 ZStack {

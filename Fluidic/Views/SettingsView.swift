@@ -34,16 +34,22 @@ struct SettingsView: View {
 
                                 Spacer()
 
-                                Stepper("", value: Binding(
-                                    get: { viewModel.settings?.dailyGoalML ?? 2500 },
-                                    set: { viewModel.settings?.dailyGoalML = $0 }
-                                ), in: 500...5000, step: 250)
+                            Stepper("", value: Binding(
+                                get: { viewModel.settings?.dailyGoalML ?? 2500 },
+                                set: { 
+                                    viewModel.settings?.dailyGoalML = $0
+                                    viewModel.saveChanges()
+                                }
+                            ), in: 500...5000, step: 250)
                                 .labelsHidden()
                             }
 
                             Slider(value: Binding(
                                 get: { viewModel.settings?.dailyGoalML ?? 2500 },
-                                set: { viewModel.settings?.dailyGoalML = $0 }
+                                set: { 
+                                    viewModel.settings?.dailyGoalML = $0
+                                    viewModel.saveChanges()
+                                }
                             ), in: 500...5000, step: 250)
                             .tint(FluidicTheme.waterBlue)
                         }
@@ -60,19 +66,21 @@ struct SettingsView: View {
                                 .font(.system(size: 13, weight: .regular, design: .rounded))
                                 .foregroundStyle(FluidicTheme.textSecondary)
 
-                            HStack(spacing: 8) {
+                            let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 3)
+                            LazyVGrid(columns: columns, spacing: 12) {
                                 ForEach(cupSizes, id: \.self) { size in
                                     let isSelected = viewModel.settings?.cupSizeML == size
                                     Button {
                                         viewModel.settings?.cupSizeML = size
+                                        viewModel.saveChanges()
                                     } label: {
                                         Text("\(Int(size))")
-                                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                            .font(.system(size: 14, weight: .semibold, design: .rounded))
                                             .foregroundStyle(isSelected ? .white : FluidicTheme.accent)
-                                            .padding(.horizontal, 12)
-                                            .padding(.vertical, 8)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
                                             .background(
-                                                RoundedRectangle(cornerRadius: 10)
+                                                RoundedRectangle(cornerRadius: 16)
                                                     .fill(isSelected ? FluidicTheme.accent : FluidicTheme.waterBlue.opacity(0.12))
                                             )
                                     }
@@ -88,18 +96,63 @@ struct SettingsView: View {
                                 get: { viewModel.settings?.notificationsEnabled ?? true },
                                 set: {
                                     viewModel.settings?.notificationsEnabled = $0
+                                    viewModel.saveChanges()
                                     if $0 {
                                         Task { await viewModel.setupNotifications() }
                                     }
                                 }
                             )) {
-                                Label("Smart Reminders", systemImage: "bell.fill")
+                                Label("Reminders", systemImage: "bell.fill")
                                     .font(.system(size: 16, weight: .semibold, design: .rounded))
                                     .foregroundStyle(FluidicTheme.textPrimary)
                             }
                             .tint(FluidicTheme.waterBlue)
 
                             if viewModel.settings?.notificationsEnabled == true {
+                                // Reminder mode picker
+                                Picker("Mode", selection: Binding(
+                                    get: { viewModel.settings?.reminderMode ?? "smart" },
+                                    set: {
+                                        viewModel.settings?.reminderMode = $0
+                                        viewModel.saveChanges()
+                                        viewModel.scheduleReminders()
+                                    }
+                                )) {
+                                    Text("Smart").tag("smart")
+                                    Text("Fixed Interval").tag("fixed")
+                                }
+                                .pickerStyle(.segmented)
+
+                                if viewModel.settings?.reminderMode == "fixed" {
+                                    // Fixed interval stepper
+                                    HStack {
+                                        Text("Remind every")
+                                            .font(.system(size: 14, weight: .medium, design: .rounded))
+                                            .foregroundStyle(FluidicTheme.textSecondary)
+                                        Spacer()
+                                        Text(formatInterval(viewModel.settings?.reminderIntervalHours ?? 1.5))
+                                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                            .foregroundStyle(FluidicTheme.textPrimary)
+                                    }
+
+                                    Stepper(
+                                        formatInterval(viewModel.settings?.reminderIntervalHours ?? 1.5),
+                                        value: Binding(
+                                            get: { viewModel.settings?.reminderIntervalHours ?? 1.5 },
+                                            set: {
+                                                viewModel.settings?.reminderIntervalHours = $0
+                                                viewModel.saveChanges()
+                                                viewModel.scheduleReminders()
+                                            }
+                                        ),
+                                        in: 0.5...4.0,
+                                        step: 0.5
+                                    )
+                                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                                    .labelsHidden()
+                                }
+
+                                // Active hours (shown for both modes)
                                 HStack {
                                     Text("Active hours")
                                         .font(.system(size: 14, weight: .medium, design: .rounded))
@@ -116,7 +169,11 @@ struct SettingsView: View {
                                         .foregroundStyle(FluidicTheme.textSecondary)
                                     Stepper("\(viewModel.settings?.activeHoursStart ?? 8):00", value: Binding(
                                         get: { viewModel.settings?.activeHoursStart ?? 8 },
-                                        set: { viewModel.settings?.activeHoursStart = $0 }
+                                        set: {
+                                            viewModel.settings?.activeHoursStart = $0
+                                            viewModel.saveChanges()
+                                            viewModel.scheduleReminders()
+                                        }
                                     ), in: 5...12)
                                     .font(.system(size: 13, weight: .medium, design: .rounded))
                                 }
@@ -127,7 +184,11 @@ struct SettingsView: View {
                                         .foregroundStyle(FluidicTheme.textSecondary)
                                     Stepper("\(viewModel.settings?.activeHoursEnd ?? 22):00", value: Binding(
                                         get: { viewModel.settings?.activeHoursEnd ?? 22 },
-                                        set: { viewModel.settings?.activeHoursEnd = $0 }
+                                        set: {
+                                            viewModel.settings?.activeHoursEnd = $0
+                                            viewModel.saveChanges()
+                                            viewModel.scheduleReminders()
+                                        }
                                     ), in: 18...23)
                                     .font(.system(size: 13, weight: .medium, design: .rounded))
                                 }
@@ -135,27 +196,25 @@ struct SettingsView: View {
                         }
                     }
 
-                    // HealthKit card
+                    // Language card
                     settingsCard {
-                        Toggle(isOn: Binding(
-                            get: { viewModel.settings?.healthKitEnabled ?? false },
-                            set: {
-                                viewModel.settings?.healthKitEnabled = $0
-                                if $0 {
-                                    Task { await viewModel.setupHealthKit() }
-                                }
+                        VStack(alignment: .leading, spacing: 12) {
+                            Label("Language", systemImage: "globe")
+                                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                .foregroundStyle(FluidicTheme.textPrimary)
+
+                            Picker("Language", selection: Binding(
+                                    get: { viewModel.settings?.languageCode ?? "en" },
+                                    set: { 
+                                        viewModel.settings?.languageCode = $0
+                                        viewModel.saveChanges()
+                                    }
+                                )) {
+                                Text("English").tag("en")
+                                Text("Čeština").tag("cs")
                             }
-                        )) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Label("Apple Health", systemImage: "heart.fill")
-                                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                    .foregroundStyle(FluidicTheme.textPrimary)
-                                Text("Sync water intake to Health app")
-                                    .font(.system(size: 13, weight: .regular, design: .rounded))
-                                    .foregroundStyle(FluidicTheme.textSecondary)
-                            }
+                            .pickerStyle(.segmented)
                         }
-                        .tint(FluidicTheme.waterBlue)
                     }
 
                     // Reset card
@@ -182,7 +241,7 @@ struct SettingsView: View {
 
                     // App info
                     VStack(spacing: 4) {
-                        Text("Fluidic v1.0")
+                        Text("Fluidic v0.0.1")
                             .font(.system(size: 13, weight: .medium, design: .rounded))
                             .foregroundStyle(FluidicTheme.textSecondary)
                         Text("Stay hydrated")
@@ -196,16 +255,26 @@ struct SettingsView: View {
         }
     }
 
+    private func formatInterval(_ hours: Double) -> String {
+        if hours == Double(Int(hours)) {
+            return "\(Int(hours))h"
+        }
+        let totalMinutes = Int(hours * 60)
+        let h = totalMinutes / 60
+        let m = totalMinutes % 60
+        return h > 0 ? "\(h)h \(m)min" : "\(m)min"
+    }
+
     @ViewBuilder
     private func settingsCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading) {
             content()
         }
-        .padding()
+        .padding(20)
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 24)
                 .fill(FluidicTheme.cardBackground)
-                .shadow(color: FluidicTheme.cardShadow, radius: 8, y: 4)
+                .shadow(color: FluidicTheme.cardShadow, radius: 24, y: 8)
         )
         .padding(.horizontal)
     }

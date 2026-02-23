@@ -5,7 +5,6 @@ import SwiftUI
 @Observable
 final class WaterViewModel {
     private var modelContext: ModelContext
-    let healthKit = HealthKitManager()
     let notifications = NotificationManager()
 
     var todayIntakes: [WaterIntake] = []
@@ -29,7 +28,7 @@ final class WaterViewModel {
         return min(todayTotal / dailyGoal, 1.0)
     }
 
-    var greeting: String {
+    var greetingKey: LocalizedStringKey {
         let hour = Calendar.current.component(.hour, from: .now)
         switch hour {
         case 5..<12: return "Good morning"
@@ -39,8 +38,8 @@ final class WaterViewModel {
         }
     }
 
-    var todayFormatted: String {
-        Date.now.formatted(.dateTime.weekday(.wide).month(.wide).day())
+    var appLocale: Locale {
+        Locale(identifier: settings?.languageCode ?? "en")
     }
 
     init(modelContext: ModelContext) {
@@ -88,21 +87,9 @@ final class WaterViewModel {
             showCelebration = true
         }
 
-        // Sync to HealthKit
-        if settings?.healthKitEnabled == true {
-            Task {
-                await healthKit.saveWaterIntake(milliliters: ml)
-            }
-        }
-
         // Reschedule notifications
         if settings?.notificationsEnabled == true {
-            notifications.scheduleAdaptiveReminders(
-                currentIntakeML: todayTotal,
-                goalML: dailyGoal,
-                activeHoursStart: settings?.activeHoursStart ?? 8,
-                activeHoursEnd: settings?.activeHoursEnd ?? 22
-            )
+            scheduleReminders()
         }
     }
 
@@ -168,17 +155,34 @@ final class WaterViewModel {
         guard settings?.notificationsEnabled == true else { return }
         let granted = await notifications.requestAuthorization()
         if granted {
+            scheduleReminders()
+        }
+    }
+
+    func scheduleReminders() {
+        let mode = settings?.reminderMode ?? "smart"
+        let start = settings?.activeHoursStart ?? 8
+        let end = settings?.activeHoursEnd ?? 22
+
+        if mode == "fixed" {
+            notifications.scheduleFixedReminders(
+                intervalHours: settings?.reminderIntervalHours ?? 1.5,
+                activeHoursStart: start,
+                activeHoursEnd: end,
+                locale: appLocale
+            )
+        } else {
             notifications.scheduleAdaptiveReminders(
                 currentIntakeML: todayTotal,
                 goalML: dailyGoal,
-                activeHoursStart: settings?.activeHoursStart ?? 8,
-                activeHoursEnd: settings?.activeHoursEnd ?? 22
+                activeHoursStart: start,
+                activeHoursEnd: end,
+                locale: appLocale
             )
         }
     }
 
-    func setupHealthKit() async {
-        guard settings?.healthKitEnabled == true else { return }
-        _ = await healthKit.requestAuthorization()
+    func saveChanges() {
+        try? modelContext.save()
     }
 }

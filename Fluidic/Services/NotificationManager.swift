@@ -16,18 +16,21 @@ final class NotificationManager {
         }
     }
 
+    // MARK: - Smart (Adaptive) Reminders
+
     func scheduleAdaptiveReminders(
         currentIntakeML: Double,
         goalML: Double,
         activeHoursStart: Int,
-        activeHoursEnd: Int
+        activeHoursEnd: Int,
+        locale: Locale = Locale(identifier: "en")
     ) {
         let center = UNUserNotificationCenter.current()
         center.removeAllPendingNotificationRequests()
 
         let remaining = goalML - currentIntakeML
         guard remaining > 0 else {
-            scheduleCongratulation()
+            scheduleCongratulation(locale: locale)
             return
         }
 
@@ -36,7 +39,6 @@ final class NotificationManager {
         let hoursLeft = max(activeHoursEnd - max(currentHour, activeHoursStart), 1)
         let mlPerHour = remaining / Double(hoursLeft)
 
-        // Schedule reminders every 1-2 hours during active hours
         let interval = mlPerHour > 300 ? 1 : 2
         var nextHour = currentHour + interval
 
@@ -49,8 +51,14 @@ final class NotificationManager {
             guard remainingAtTime > 0 else { break }
 
             let content = UNMutableNotificationContent()
-            content.title = "Time to hydrate!"
-            content.body = String(format: "You need about %.0f ml per hour to reach your goal. Tap to log!", mlPerHour)
+            content.title = String(
+                localized: "Time to hydrate!",
+                locale: locale
+            )
+            content.body = String(
+                localized: "You need about \(Int(mlPerHour)) ml per hour to reach your goal. Tap to log!",
+                locale: locale
+            )
             content.sound = .default
 
             let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
@@ -65,10 +73,67 @@ final class NotificationManager {
         }
     }
 
-    private func scheduleCongratulation() {
+    // MARK: - Fixed Interval Reminders
+
+    func scheduleFixedReminders(
+        intervalHours: Double,
+        activeHoursStart: Int,
+        activeHoursEnd: Int,
+        locale: Locale = Locale(identifier: "en")
+    ) {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests()
+
+        let intervalMinutes = Int(intervalHours * 60)
+        var currentMinute = activeHoursStart * 60
+        let endMinute = activeHoursEnd * 60
+        var index = 0
+
+        while currentMinute < endMinute {
+            let hour = currentMinute / 60
+            let minute = currentMinute % 60
+
+            var dateComponents = DateComponents()
+            dateComponents.hour = hour
+            dateComponents.minute = minute
+
+            let content = UNMutableNotificationContent()
+            content.title = String(
+                localized: "Time to hydrate!",
+                locale: locale
+            )
+            content.body = String(
+                localized: "Don't forget to drink water and stay hydrated!",
+                locale: locale
+            )
+            content.sound = .default
+
+            // repeats: true so these fire daily without the app being opened
+            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+            let request = UNNotificationRequest(
+                identifier: "fluidic-fixed-\(index)",
+                content: content,
+                trigger: trigger
+            )
+
+            center.add(request)
+            currentMinute += intervalMinutes
+            index += 1
+        }
+    }
+
+    // MARK: - Congratulation
+
+    private func scheduleCongratulation(locale: Locale = Locale(identifier: "en")) {
         let content = UNMutableNotificationContent()
-        content.title = "Goal reached!"
-        content.body = "Amazing! You've hit your daily water intake goal. Keep it up!"
+        content.title = String(
+            localized: "Goal reached!",
+            locale: locale
+        )
+        content.body = String(
+            localized: "Amazing! You've hit your daily water intake goal. Keep it up!",
+            locale: locale
+        )
         content.sound = .default
 
         let request = UNNotificationRequest(

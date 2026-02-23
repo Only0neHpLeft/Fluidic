@@ -12,10 +12,10 @@ struct HomeView: View {
                 VStack(spacing: 24) {
                     // Greeting header
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(viewModel.greeting)
+                        Text(viewModel.greetingKey)
                             .font(.system(size: 28, weight: .bold, design: .rounded))
                             .foregroundStyle(FluidicTheme.textPrimary)
-                        Text(viewModel.todayFormatted)
+                        Text(Date.now, format: .dateTime.weekday(.wide).month(.wide).day())
                             .font(.system(size: 15, weight: .medium, design: .rounded))
                             .foregroundStyle(FluidicTheme.textSecondary)
                     }
@@ -40,16 +40,16 @@ struct HomeView: View {
                                 .font(.system(size: 18, weight: .medium, design: .rounded))
                                 .foregroundStyle(FluidicTheme.textSecondary)
                         }
-                        Text("Tap the cup to add \(Int(viewModel.cupSize)) ml")
+                        Text("Tap the cup to add \(Int(viewModel.cupSize)) ml", comment: "Hint below water progress")
                             .font(.system(size: 13, weight: .medium, design: .rounded))
                             .foregroundStyle(FluidicTheme.textSecondary)
                     }
 
                     // Quick add buttons
                     HStack(spacing: 10) {
-                        QuickAddButton(label: "+100 ml") { viewModel.addWater(amount: 100) }
-                        QuickAddButton(label: "+250 ml") { viewModel.addWater(amount: 250) }
-                        QuickAddButton(label: "+500 ml") { viewModel.addWater(amount: 500) }
+                        QuickAddButton(amount: 100) { viewModel.addWater(amount: 100) }
+                        QuickAddButton(amount: 250) { viewModel.addWater(amount: 250) }
+                        QuickAddButton(amount: 500) { viewModel.addWater(amount: 500) }
                     }
 
                     // Today's log card
@@ -76,9 +76,9 @@ struct HomeView: View {
                         }
                         .padding()
                         .background(
-                            RoundedRectangle(cornerRadius: 16)
+                            RoundedRectangle(cornerRadius: 24)
                                 .fill(FluidicTheme.cardBackground)
-                                .shadow(color: FluidicTheme.cardShadow, radius: 8, y: 4)
+                                .shadow(color: FluidicTheme.cardShadow, radius: 24, y: 8)
                         )
                         .padding(.horizontal)
                     }
@@ -138,9 +138,9 @@ struct CelebrationView: View {
             }
             .padding(32)
             .background(
-                RoundedRectangle(cornerRadius: 24)
+                RoundedRectangle(cornerRadius: 32)
                     .fill(FluidicTheme.cardBackground)
-                    .shadow(color: FluidicTheme.cardShadow, radius: 20, y: 10)
+                    .shadow(color: FluidicTheme.cardShadow, radius: 32, y: 16)
             )
             .padding(40)
         }

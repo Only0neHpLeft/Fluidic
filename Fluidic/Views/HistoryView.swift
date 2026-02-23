@@ -38,7 +38,7 @@ struct HistoryView: View {
                             .font(.system(size: 32))
                             .foregroundStyle(.orange)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("\(viewModel.currentStreak()) day streak")
+                            Text("\(viewModel.currentStreak()) day streak", comment: "Streak count label")
                                 .font(.system(size: 20, weight: .bold, design: .rounded))
                                 .foregroundStyle(FluidicTheme.textPrimary)
                             Text("Keep it going!")
@@ -49,9 +49,9 @@ struct HistoryView: View {
                     }
                     .padding()
                     .background(
-                        RoundedRectangle(cornerRadius: 16)
+                        RoundedRectangle(cornerRadius: 24)
                             .fill(FluidicTheme.cardBackground)
-                            .shadow(color: FluidicTheme.cardShadow, radius: 8, y: 4)
+                            .shadow(color: FluidicTheme.cardShadow, radius: 24, y: 8)
                     )
                     .padding(.horizontal)
 
@@ -122,9 +122,9 @@ struct HistoryView: View {
                     .frame(height: 220)
                     .padding()
                     .background(
-                        RoundedRectangle(cornerRadius: 16)
+                        RoundedRectangle(cornerRadius: 24)
                             .fill(FluidicTheme.cardBackground)
-                            .shadow(color: FluidicTheme.cardShadow, radius: 8, y: 4)
+                            .shadow(color: FluidicTheme.cardShadow, radius: 24, y: 8)
                     )
                     .padding(.horizontal)
 
@@ -141,6 +141,7 @@ struct HistoryView: View {
         let end = Calendar.current.date(byAdding: .day, value: 6, to: weekStart)!
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d"
+        formatter.locale = viewModel.appLocale
         return "\(formatter.string(from: weekStart)) - \(formatter.string(from: end))"
     }
 }
@@ -150,6 +151,15 @@ struct MonthCalendarView: View {
 
     private let calendar = Calendar.current
     private let columns = Array(repeating: GridItem(.flexible()), count: 7)
+
+    private var localizedDayHeaders: [String] {
+        let formatter = DateFormatter()
+        formatter.locale = viewModel.appLocale
+        // veryShort gives single/two letter abbreviations; reorder to Monday-first
+        let symbols = formatter.veryShortWeekdaySymbols!
+        // symbols is Sun=0, Mon=1, ..., Sat=6 → rotate to Mon-first
+        return Array(symbols[1...]) + [symbols[0]]
+    }
 
     private var currentMonth: Date {
         calendar.startOfDay(for: .now)
@@ -170,13 +180,13 @@ struct MonthCalendarView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(currentMonth.formatted(.dateTime.month(.wide).year()))
+            Text(currentMonth, format: .dateTime.month(.wide).year())
                 .font(.system(size: 17, weight: .semibold, design: .rounded))
                 .foregroundStyle(FluidicTheme.textPrimary)
 
             // Day headers
             HStack {
-                ForEach(["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"], id: \.self) { day in
+                ForEach(Array(localizedDayHeaders.enumerated()), id: \.offset) { _, day in
                     Text(day)
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundStyle(FluidicTheme.textSecondary)
@@ -210,9 +220,9 @@ struct MonthCalendarView: View {
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 24)
                 .fill(FluidicTheme.cardBackground)
-                .shadow(color: FluidicTheme.cardShadow, radius: 8, y: 4)
+                .shadow(color: FluidicTheme.cardShadow, radius: 24, y: 8)
         )
     }
 

@@ -8,7 +8,9 @@ final class UserSettings {
     var activeHoursStart: Int
     var activeHoursEnd: Int
     var notificationsEnabled: Bool
-    var healthKitEnabled: Bool
+    var languageCode: String
+    var reminderMode: String          // "smart" or "fixed"
+    var reminderIntervalHours: Double // 0.5 - 4.0
 
     init(
         dailyGoalML: Double = 2500,
@@ -16,13 +18,17 @@ final class UserSettings {
         activeHoursStart: Int = 8,
         activeHoursEnd: Int = 22,
         notificationsEnabled: Bool = true,
-        healthKitEnabled: Bool = false
+        languageCode: String = "en",
+        reminderMode: String = "smart",
+        reminderIntervalHours: Double = 1.5
     ) {
         self.dailyGoalML = dailyGoalML
         self.cupSizeML = cupSizeML
         self.activeHoursStart = activeHoursStart
         self.activeHoursEnd = activeHoursEnd
         self.notificationsEnabled = notificationsEnabled
-        self.healthKitEnabled = healthKitEnabled
+        self.languageCode = languageCode
+        self.reminderMode = reminderMode
+        self.reminderIntervalHours = reminderIntervalHours
     }
 }

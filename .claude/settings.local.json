@@ -3,7 +3,8 @@
     "allow": [
       "Bash(tail:*)",
       "Bash(git:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(xcrun simctl:*)"
     ]
   }
 }
