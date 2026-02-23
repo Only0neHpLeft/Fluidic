@@ -109,8 +109,9 @@ final class WaterViewModel {
             appVersion: appVersion
         )
 
-        // Award XP for badge unlocks
-        if achievementManager.newlyUnlocked != nil {
+        // Award XP for badge unlocks + send notification
+        if let unlocked = achievementManager.newlyUnlocked {
+            notifications.sendBadgeNotification(title: unlocked.title, locale: appLocale)
             xpManager.awardXP(100, settings: settings)
         }
 

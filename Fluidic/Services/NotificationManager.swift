@@ -122,6 +122,29 @@ final class NotificationManager {
         }
     }
 
+    // MARK: - Badge Unlocked
+
+    func sendBadgeNotification(title: String, locale: Locale = Locale(identifier: "en")) {
+        let content = UNMutableNotificationContent()
+        content.title = String(
+            localized: "Achievement Unlocked!",
+            locale: locale
+        )
+        content.body = String(
+            localized: "Achievement unlocked: \(title)",
+            locale: locale
+        )
+        content.sound = .default
+
+        // Fire immediately
+        let request = UNNotificationRequest(
+            identifier: "fluidic-badge-\(UUID().uuidString)",
+            content: content,
+            trigger: nil
+        )
+        UNUserNotificationCenter.current().add(request)
+    }
+
     // MARK: - Congratulation
 
     private func scheduleCongratulation(locale: Locale = Locale(identifier: "en")) {
