@@ -11,6 +11,8 @@ final class WaterViewModel {
     var settings: UserSettings?
     var showCelebration = false
     var achievementManager = AchievementManager()
+    var xpManager = XPManager()
+    var challengeManager = ChallengeManager()
 
     var todayTotal: Double {
         todayIntakes.reduce(0) { $0 + $1.amount }
@@ -84,13 +86,15 @@ final class WaterViewModel {
         todayIntakes.append(intake)
 
         // Check if goal just reached
-        if todayTotal >= dailyGoal && (todayTotal - ml) < dailyGoal {
+        let goalJustReached = todayTotal >= dailyGoal && (todayTotal - ml) < dailyGoal
+        if goalJustReached {
             showCelebration = true
         }
 
         // Check achievements
         let hour = Calendar.current.component(.hour, from: Date())
         let totalEntries = achievementManager.totalEntryCount()
+        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.2"
         achievementManager.checkAchievements(
             todayTotal: todayTotal,
             dailyGoal: dailyGoal,
@@ -98,8 +102,56 @@ final class WaterViewModel {
             streak: currentStreak(),
             totalEntries: totalEntries,
             intakeHour: hour,
-            locale: appLocale
+            locale: appLocale,
+            todayEntries: todayIntakes,
+            challengesCompleted: settings?.challengesCompleted ?? 0,
+            totalXP: settings?.totalXP ?? 0,
+            appVersion: appVersion
         )
+
+        // Award XP for badge unlocks
+        if achievementManager.newlyUnlocked != nil {
+            xpManager.awardXP(100, settings: settings)
+        }
+
+        // Award XP for logging water
+        xpManager.awardXP(10, settings: settings)
+
+        // Award XP if goal just reached
+        if goalJustReached {
+            xpManager.awardXP(50, settings: settings)
+        }
+
+        // Award XP for daily streak
+        let streakVal = currentStreak()
+        if streakVal > 0 && goalJustReached {
+            xpManager.awardXP(20, settings: settings)
+        }
+
+        // Check daily challenge
+        let calendar = Calendar.current
+        let yesterdayDate = calendar.date(byAdding: .day, value: -1, to: calendar.startOfDay(for: .now)) ?? Date()
+        let ctx = ChallengeContext(
+            todayTotal: todayTotal,
+            dailyGoal: dailyGoal,
+            todayEntries: todayIntakes,
+            yesterdayTotal: totalForDate(yesterdayDate),
+            activeHoursStart: settings?.activeHoursStart ?? 8
+        )
+        if challengeManager.checkChallenge(context: ctx) {
+            xpManager.awardXP(75, settings: settings)
+            settings?.challengesCompleted = (settings?.challengesCompleted ?? 0) + 1
+        }
+
+        // Check streak freeze award (every 7 days of streak)
+        if streakVal > 0, streakVal % 7 == 0,
+           streakVal > (settings?.lastStreakFreezeAwardedAt ?? 0),
+           (settings?.streakFreezeCount ?? 0) < 3 {
+            settings?.streakFreezeCount = (settings?.streakFreezeCount ?? 0) + 1
+            settings?.lastStreakFreezeAwardedAt = streakVal
+        }
+
+        saveChanges()
 
         // Reschedule notifications
         if settings?.notificationsEnabled == true {
@@ -145,6 +197,7 @@ final class WaterViewModel {
         let calendar = Calendar.current
         var streak = 0
         var checkDate = calendar.startOfDay(for: .now)
+        let frozenDates = settings?.frozenDates ?? []
 
         if todayTotal < dailyGoal {
             guard let yesterday = calendar.date(byAdding: .day, value: -1, to: checkDate) else { return 0 }
@@ -155,11 +208,13 @@ final class WaterViewModel {
             let total = totalForDate(checkDate)
             if total >= dailyGoal {
                 streak += 1
-                guard let prevDay = calendar.date(byAdding: .day, value: -1, to: checkDate) else { break }
-                checkDate = prevDay
+            } else if frozenDates.contains(where: { calendar.isDate($0, inSameDayAs: checkDate) }) {
+                streak += 1 // frozen day counts
             } else {
                 break
             }
+            guard let prevDay = calendar.date(byAdding: .day, value: -1, to: checkDate) else { break }
+            checkDate = prevDay
         }
 
         return streak

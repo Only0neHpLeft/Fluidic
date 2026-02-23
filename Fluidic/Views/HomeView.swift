@@ -116,6 +116,13 @@ struct HomeView: View {
                     viewModel.achievementManager.dismissToast()
                 }
             }
+
+            // Level up celebration
+            if viewModel.xpManager.showLevelUp {
+                LevelUpView(level: viewModel.xpManager.newLevel, isCS: viewModel.appLocale.language.languageCode?.identifier == "cs") {
+                    viewModel.xpManager.dismissLevelUp()
+                }
+            }
         }
     }
 

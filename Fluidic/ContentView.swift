@@ -57,6 +57,7 @@ struct ContentView: View {
             if viewModel == nil {
                 let vm = WaterViewModel(modelContext: modelContext)
                 vm.achievementManager.configure(modelContext: modelContext)
+                vm.challengeManager.configure(modelContext: modelContext)
                 viewModel = vm
                 showOnboarding = !(vm.settings?.hasCompletedOnboarding ?? false)
             }
@@ -66,5 +67,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: [WaterIntake.self, UserSettings.self, Achievement.self], inMemory: true)
+        .modelContainer(for: [WaterIntake.self, UserSettings.self, Achievement.self, DailyChallenge.self], inMemory: true)
 }
