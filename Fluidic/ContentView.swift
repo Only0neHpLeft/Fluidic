@@ -3,6 +3,7 @@ import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @State private var viewModel: WaterViewModel?
     @State private var selectedTab = 0
 
@@ -26,6 +27,14 @@ struct ContentView: View {
                 .tint(FluidicTheme.accent)
                 .task {
                     await viewModel.setupNotifications()
+                }
+                .onChange(of: scenePhase) { _, newPhase in
+                    if newPhase == .active, let viewModel {
+                        viewModel.loadTodayIntakes()
+                        Task {
+                            await viewModel.scheduleReminders()
+                        }
+                    }
                 }
             } else {
                 ZStack {
