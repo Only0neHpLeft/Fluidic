@@ -88,46 +88,69 @@ struct HistoryView: View {
                     .padding(.horizontal, 24)
 
                     // Bar chart
-                    Chart(weekData, id: \.date) { entry in
-                        BarMark(
-                            x: .value("Day", entry.date, unit: .day),
-                            y: .value("ml", entry.total)
-                        )
-                        .foregroundStyle(
-                            entry.total >= viewModel.dailyGoal
-                                ? FluidicTheme.successGreen
-                                : FluidicTheme.waterBlue
-                        )
-                        .cornerRadius(6)
-
-                        // Goal line
-                        RuleMark(y: .value("Goal", viewModel.dailyGoal))
-                            .foregroundStyle(FluidicTheme.accent.opacity(0.5))
-                            .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
-                    }
-                    .chartXAxis {
-                        AxisMarks(values: .stride(by: .day)) { _ in
-                            AxisValueLabel(format: .dateTime.weekday(.abbreviated))
+                    if weekData.allSatisfy({ $0.total == 0 }) {
+                        VStack(spacing: 8) {
+                            Image(systemName: "chart.bar")
+                                .font(.title)
+                                .foregroundStyle(FluidicTheme.textSecondary.opacity(0.5))
+                            Text(String(localized: "No data for this week"))
+                                .font(.subheadline)
+                                .foregroundStyle(FluidicTheme.textSecondary)
+                            Text(String(localized: "Start logging water to see your progress"))
+                                .font(.caption)
+                                .foregroundStyle(FluidicTheme.textSecondary.opacity(0.7))
                         }
-                    }
-                    .chartYAxis {
-                        AxisMarks { value in
-                            AxisGridLine()
-                            AxisValueLabel {
-                                if let ml = value.as(Double.self) {
-                                    Text(ml >= 1000 ? String(format: "%.1fL", ml / 1000) : "\(Int(ml))")
+                        .frame(height: 180)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 24)
+                                .fill(FluidicTheme.cardBackground)
+                                .shadow(color: FluidicTheme.cardShadow, radius: 24, y: 8)
+                        )
+                        .padding(.horizontal)
+                    } else {
+                        Chart(weekData, id: \.date) { entry in
+                            BarMark(
+                                x: .value("Day", entry.date, unit: .day),
+                                y: .value("ml", entry.total)
+                            )
+                            .foregroundStyle(
+                                entry.total >= viewModel.dailyGoal
+                                    ? FluidicTheme.successGreen
+                                    : FluidicTheme.waterBlue
+                            )
+                            .cornerRadius(6)
+
+                            // Goal line
+                            RuleMark(y: .value("Goal", viewModel.dailyGoal))
+                                .foregroundStyle(FluidicTheme.accent.opacity(0.5))
+                                .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 5]))
+                        }
+                        .chartXAxis {
+                            AxisMarks(values: .stride(by: .day)) { _ in
+                                AxisValueLabel(format: .dateTime.weekday(.abbreviated))
+                            }
+                        }
+                        .chartYAxis {
+                            AxisMarks { value in
+                                AxisGridLine()
+                                AxisValueLabel {
+                                    if let ml = value.as(Double.self) {
+                                        Text(ml >= 1000 ? String(format: "%.1fL", ml / 1000) : "\(Int(ml))")
+                                    }
                                 }
                             }
                         }
+                        .frame(height: 220)
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 24)
+                                .fill(FluidicTheme.cardBackground)
+                                .shadow(color: FluidicTheme.cardShadow, radius: 24, y: 8)
+                        )
+                        .padding(.horizontal)
                     }
-                    .frame(height: 220)
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 24)
-                            .fill(FluidicTheme.cardBackground)
-                            .shadow(color: FluidicTheme.cardShadow, radius: 24, y: 8)
-                    )
-                    .padding(.horizontal)
 
                     // MARK: - Achievements
                     VStack(alignment: .leading, spacing: 12) {
