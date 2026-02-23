@@ -59,6 +59,16 @@ struct HomeView: View {
                         QuickAddButton(amount: 500) { viewModel.addWater(amount: 500) }
                     }
 
+                    // Daily challenge
+                    if let challenge = viewModel.challengeManager.todayChallenge {
+                        DailyChallengeCard(
+                            challengeText: viewModel.challengeManager.challengeText(
+                                isCS: viewModel.appLocale.language.languageCode?.identifier == "cs"
+                            ),
+                            isCompleted: challenge.completed
+                        )
+                    }
+
                     // Today's log card
                     if !viewModel.todayIntakes.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
