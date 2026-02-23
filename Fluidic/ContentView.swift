@@ -47,7 +47,9 @@ struct ContentView: View {
         }
         .onAppear {
             if viewModel == nil {
-                viewModel = WaterViewModel(modelContext: modelContext)
+                let vm = WaterViewModel(modelContext: modelContext)
+                vm.achievementManager.configure(modelContext: modelContext)
+                viewModel = vm
             }
         }
     }

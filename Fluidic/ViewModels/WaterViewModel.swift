@@ -10,6 +10,7 @@ final class WaterViewModel {
     var todayIntakes: [WaterIntake] = []
     var settings: UserSettings?
     var showCelebration = false
+    var achievementManager = AchievementManager()
 
     var todayTotal: Double {
         todayIntakes.reduce(0) { $0 + $1.amount }
@@ -86,6 +87,19 @@ final class WaterViewModel {
         if todayTotal >= dailyGoal && (todayTotal - ml) < dailyGoal {
             showCelebration = true
         }
+
+        // Check achievements
+        let hour = Calendar.current.component(.hour, from: Date())
+        let totalEntries = achievementManager.totalEntryCount()
+        achievementManager.checkAchievements(
+            todayTotal: todayTotal,
+            dailyGoal: dailyGoal,
+            lastIntakeAmount: intake.amount,
+            streak: currentStreak(),
+            totalEntries: totalEntries,
+            intakeHour: hour,
+            locale: appLocale
+        )
 
         // Reschedule notifications
         if settings?.notificationsEnabled == true {
