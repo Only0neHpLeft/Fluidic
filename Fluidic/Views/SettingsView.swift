@@ -241,7 +241,7 @@ struct SettingsView: View {
 
                     // App info
                     VStack(spacing: 4) {
-                        Text("Fluidic v0.0.1")
+                        Text("Fluidic v0.0.2")
                             .font(.system(size: 13, weight: .medium, design: .rounded))
                             .foregroundStyle(FluidicTheme.textSecondary)
                         Text("Stay hydrated")
