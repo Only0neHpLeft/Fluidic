@@ -92,6 +92,13 @@ struct HomeView: View {
                     viewModel.showCelebration = false
                 }
             }
+
+            // Achievement toast
+            if let achievement = viewModel.achievementManager.newlyUnlocked {
+                AchievementToastView(achievement: achievement) {
+                    viewModel.achievementManager.dismissToast()
+                }
+            }
         }
     }
 
