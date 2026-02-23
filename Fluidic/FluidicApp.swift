@@ -7,6 +7,6 @@ struct FluidicApp: App {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(for: [WaterIntake.self, UserSettings.self, Achievement.self])
+        .modelContainer(for: [WaterIntake.self, UserSettings.self, Achievement.self, DailyChallenge.self])
     }
 }
