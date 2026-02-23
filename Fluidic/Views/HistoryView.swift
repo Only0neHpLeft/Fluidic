@@ -45,6 +45,16 @@ struct HistoryView: View {
                             Text("Keep it going!")
                                 .font(.system(size: 14, weight: .medium, design: .rounded))
                                 .foregroundStyle(FluidicTheme.textSecondary)
+                            if (viewModel.settings?.streakFreezeCount ?? 0) > 0 {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "snowflake")
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(.cyan)
+                                    Text(String(localized: "\(viewModel.settings?.streakFreezeCount ?? 0) freezes"))
+                                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                                        .foregroundStyle(FluidicTheme.textSecondary)
+                                }
+                            }
                         }
                         Spacer()
                     }
@@ -251,7 +261,7 @@ struct MonthCalendarView: View {
                         let isFuture = date > .now
 
                         Circle()
-                            .fill(dotColor(total: total, isFuture: isFuture))
+                            .fill(dotColor(total: total, isFuture: isFuture, date: date))
                             .frame(width: 28, height: 28)
                             .overlay {
                                 Text("\(calendar.component(.day, from: date))")
@@ -276,8 +286,12 @@ struct MonthCalendarView: View {
         )
     }
 
-    private func dotColor(total: Double, isFuture: Bool) -> Color {
+    private func dotColor(total: Double, isFuture: Bool, date: Date) -> Color {
         if isFuture { return FluidicTheme.lightBlue.opacity(0.2) }
+        let frozen = viewModel.settings?.frozenDates ?? []
+        if frozen.contains(where: { Calendar.current.isDate($0, inSameDayAs: date) }) {
+            return .cyan.opacity(0.4)
+        }
         if total >= viewModel.dailyGoal { return FluidicTheme.successGreen }
         if total > 0 { return FluidicTheme.secondaryBlue.opacity(0.5) }
         return FluidicTheme.lightBlue.opacity(0.3)
