@@ -79,7 +79,7 @@ final class WaterViewModel {
         let ml = amount ?? cupSize
         let intake = WaterIntake(amount: ml)
         modelContext.insert(intake)
-        try? modelContext.save()
+        saveChanges()
         todayIntakes.append(intake)
 
         // Check if goal just reached
@@ -97,7 +97,7 @@ final class WaterViewModel {
         for intake in todayIntakes {
             modelContext.delete(intake)
         }
-        try? modelContext.save()
+        saveChanges()
         todayIntakes = []
         showCelebration = false
     }
@@ -183,6 +183,10 @@ final class WaterViewModel {
     }
 
     func saveChanges() {
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save: \(error)")
+        }
     }
 }
