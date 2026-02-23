@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 final class Achievement {
-    #Unique([\.achievementId])
+    #Unique<Achievement>([\.achievementId])
 
     var achievementId: String
     var title: String

@@ -38,11 +38,9 @@ struct ContentView: View {
                         await viewModel.setupNotifications()
                     }
                     .onChange(of: scenePhase) { _, newPhase in
-                        if newPhase == .active, let viewModel {
+                        if newPhase == .active {
                             viewModel.loadTodayIntakes()
-                            Task {
-                                await viewModel.scheduleReminders()
-                            }
+                            viewModel.scheduleReminders()
                         }
                     }
                 }
