@@ -11,6 +11,7 @@ final class UserSettings {
     var languageCode: String
     var reminderMode: String          // "smart" or "fixed"
     var reminderIntervalHours: Double // 0.5 - 4.0
+    var hasCompletedOnboarding: Bool
 
     init(
         dailyGoalML: Double = 2500,
@@ -20,7 +21,8 @@ final class UserSettings {
         notificationsEnabled: Bool = true,
         languageCode: String = "en",
         reminderMode: String = "smart",
-        reminderIntervalHours: Double = 1.5
+        reminderIntervalHours: Double = 1.5,
+        hasCompletedOnboarding: Bool = false
     ) {
         self.dailyGoalML = dailyGoalML
         self.cupSizeML = cupSizeML
@@ -30,5 +32,6 @@ final class UserSettings {
         self.languageCode = languageCode
         self.reminderMode = reminderMode
         self.reminderIntervalHours = reminderIntervalHours
+        self.hasCompletedOnboarding = hasCompletedOnboarding
     }
 }
